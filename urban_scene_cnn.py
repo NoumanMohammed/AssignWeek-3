@@ -250,3 +250,139 @@ print("\n" + "="*70)
 print("✅ STEP 4 COMPLETE: CNN model implemented")
 print("="*70)
 print("\n💾 COMMIT NOW: 'Implemented CNN model for urban scene classification'\n")
+
+
+# =============================================================================
+# STEP 5: Train the CNN Model
+# =============================================================================
+
+print("\n" + "="*70)
+print("STEP 5: Training CNN Model")
+print("="*70)
+
+# Define loss function and optimizer
+criterion = nn.CrossEntropyLoss()
+optimizer = optim.Adam(model.parameters(), lr=0.001)
+
+print("\n⚙️ Training Configuration:")
+print(f"   Loss function: Cross Entropy Loss")
+print(f"   Optimizer: Adam")
+print(f"   Learning rate: 0.001")
+print(f"   Epochs: 5")
+
+# Training function
+def train_model(model, train_loader, val_loader, optimizer, criterion, epochs=5):
+    """
+    Train the CNN model
+    
+    Args:
+        model: The neural network model
+        train_loader: DataLoader for training data
+        val_loader: DataLoader for validation data
+        optimizer: Optimization algorithm
+        criterion: Loss function
+        epochs: Number of training epochs
+    """
+    training_history = {
+        'train_loss': [],
+        'val_loss': [],
+        'val_accuracy': []
+    }
+    
+    print("\n🚀 Starting training...")
+    print("-" * 70)
+    
+    for epoch in range(epochs):
+        # Training phase
+        model.train()
+        running_loss = 0.0
+        batch_count = 0
+        
+        for i, (images, labels) in enumerate(train_loader):
+            # Zero the parameter gradients
+            optimizer.zero_grad()
+            
+            # Forward pass
+            outputs = model(images)
+            loss = criterion(outputs, labels)
+            
+            # Backward pass and optimize
+            loss.backward()
+            optimizer.step()
+            
+            running_loss += loss.item()
+            batch_count += 1
+            
+            # Print progress every 10 batches
+            if (i + 1) % 10 == 0:
+                print(f"   Epoch [{epoch+1}/{epochs}], Batch [{i+1}/{len(train_loader)}], "
+                      f"Loss: {loss.item():.4f}")
+        
+        avg_train_loss = running_loss / batch_count
+        training_history['train_loss'].append(avg_train_loss)
+        
+        # Validation phase
+        model.eval()
+        val_loss = 0.0
+        correct = 0
+        total = 0
+        
+        with torch.no_grad():
+            for images, labels in val_loader:
+                outputs = model(images)
+                loss = criterion(outputs, labels)
+                val_loss += loss.item()
+                
+                _, predicted = torch.max(outputs.data, 1)
+                total += labels.size(0)
+                correct += (predicted == labels).sum().item()
+        
+        avg_val_loss = val_loss / len(val_loader)
+        val_accuracy = correct / total
+        
+        training_history['val_loss'].append(avg_val_loss)
+        training_history['val_accuracy'].append(val_accuracy)
+        
+        print(f"\n📊 Epoch {epoch+1}/{epochs} Summary:")
+        print(f"   Training Loss: {avg_train_loss:.4f}")
+        print(f"   Validation Loss: {avg_val_loss:.4f}")
+        print(f"   Validation Accuracy: {val_accuracy:.4f} ({val_accuracy*100:.2f}%)")
+        print("-" * 70)
+    
+    print("\n✅ Training complete!")
+    return training_history
+
+# Train model
+training_history = train_model(model, train_loader, val_loader, optimizer, criterion, epochs=5)
+
+# Plot training history
+print("\n📈 Generating training plots...")
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+
+# Plot loss
+epochs_range = range(1, len(training_history['train_loss']) + 1)
+ax1.plot(epochs_range, training_history['train_loss'], 'b-', label='Training Loss')
+ax1.plot(epochs_range, training_history['val_loss'], 'r-', label='Validation Loss')
+ax1.set_xlabel('Epoch')
+ax1.set_ylabel('Loss')
+ax1.set_title('Training and Validation Loss')
+ax1.legend()
+ax1.grid(True)
+
+# Plot accuracy
+ax2.plot(epochs_range, training_history['val_accuracy'], 'g-', label='Validation Accuracy')
+ax2.set_xlabel('Epoch')
+ax2.set_ylabel('Accuracy')
+ax2.set_title('Validation Accuracy')
+ax2.legend()
+ax2.grid(True)
+
+plt.tight_layout()
+plt.savefig("training_history.png")
+print("✅ Training plots saved as 'training_history.png'")
+# plt.show()  # Uncomment to display
+
+print("\n" + "="*70)
+print("✅ STEP 5 COMPLETE: Model training finished")
+print("="*70)
+print("\n💾 COMMIT NOW: 'Trained CNN model for urban scene classification'\n")
