@@ -386,3 +386,108 @@ print("\n" + "="*70)
 print("✅ STEP 5 COMPLETE: Model training finished")
 print("="*70)
 print("\n💾 COMMIT NOW: 'Trained CNN model for urban scene classification'\n")
+
+
+# =============================================================================
+# STEP 6: Evaluate Model Performance
+# =============================================================================
+
+print("\n" + "="*70)
+print("STEP 6: Evaluating Model Performance")
+print("="*70)
+
+# Evaluate on test data
+def evaluate_model(model, test_loader):
+    """
+    Evaluate the trained model on test data
+    
+    Args:
+        model: The trained neural network model
+        test_loader: DataLoader for test data
+    
+    Returns:
+        test_accuracy: Accuracy on test set
+    """
+    model.eval()
+    correct = 0
+    total = 0
+    
+    class_correct = {}
+    class_total = {}
+    
+    print("\n🧪 Evaluating on test set...")
+    
+    with torch.no_grad():
+        for images, labels in test_loader:
+            outputs = model(images)
+            _, predicted = torch.max(outputs.data, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+            
+            # Per-class accuracy
+            for label, prediction in zip(labels, predicted):
+                label_name = dataset.classes[label]
+                if label_name not in class_correct:
+                    class_correct[label_name] = 0
+                    class_total[label_name] = 0
+                
+                class_total[label_name] += 1
+                if label == prediction:
+                    class_correct[label_name] += 1
+    
+    test_accuracy = correct / total
+    
+    print(f"\n📊 Overall Test Accuracy: {test_accuracy:.4f} ({test_accuracy*100:.2f}%)")
+    print(f"   Correctly classified: {correct}/{total} images")
+    
+    # Per-class accuracy
+    print("\n📋 Per-Class Accuracy:")
+    for class_name in sorted(class_correct.keys()):
+        if class_total[class_name] > 0:
+            acc = class_correct[class_name] / class_total[class_name]
+            print(f"   {class_name}: {acc:.4f} ({acc*100:.2f}%) "
+                  f"[{class_correct[class_name]}/{class_total[class_name]}]")
+    
+    return test_accuracy
+
+test_accuracy = evaluate_model(model, test_loader)
+
+# Plot results
+print("\n📊 Generating performance visualization...")
+plt.figure(figsize=(8, 6))
+plt.bar(["Test Accuracy"], [test_accuracy], color='steelblue')
+plt.ylabel("Accuracy")
+plt.title("CNN Model Performance on Test Set")
+plt.ylim([0, 1])
+plt.grid(axis='y', alpha=0.3)
+
+# Add value on top of bar
+plt.text(0, test_accuracy + 0.02, f'{test_accuracy:.4f}\n({test_accuracy*100:.2f}%)', 
+         ha='center', va='bottom', fontsize=12, fontweight='bold')
+
+plt.tight_layout()
+plt.savefig("test_accuracy.png")
+print("✅ Performance plot saved as 'test_accuracy.png'")
+# plt.show()  # Uncomment to display
+
+# Save the model
+print("\n💾 Saving trained model...")
+torch.save(model.state_dict(), 'urban_scene_cnn_model.pth')
+print("✅ Model saved as 'urban_scene_cnn_model.pth'")
+
+print("\n" + "="*70)
+print("✅ STEP 6 COMPLETE: Model evaluation finished")
+print("="*70)
+print("\n💾 COMMIT NOW: 'Evaluated CNN model performance on test data'\n")
+
+# =============================================================================
+# FINAL SUMMARY
+# =============================================================================
+
+
+print("\n📋 Summary:")
+print(f"   Dataset: MIT Places (Urban Subset)")
+print(f"   Total images: {len(dataset)}")
+print(f"   Number of classes: {num_classes}")
+print(f"   Model: Simple CNN with Batch Normalization")
+print(f"   Final Test Accuracy: {test_accuracy:.4f} ({test_accuracy*100:.2f}%)")
