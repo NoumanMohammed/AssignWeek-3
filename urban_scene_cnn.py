@@ -186,3 +186,67 @@ print("\n" + "="*70)
 print("✅ STEP 3 COMPLETE: Dataset loaded and preprocessed")
 print("="*70)
 print("\n💾 COMMIT NOW: 'Loaded and preprocessed MIT Places dataset'\n")
+
+
+# =============================================================================
+# STEP 4: Build a Simple CNN Model
+# =============================================================================
+
+import torch.nn as nn
+import torch.optim as optim
+
+print("\n" + "="*70)
+print("STEP 4: Building CNN Model")
+print("="*70)
+
+# Define a simple CNN architecture
+class UrbanSceneCNN(nn.Module):
+    def __init__(self, num_classes):
+        super(UrbanSceneCNN, self).__init__()
+        
+        # First convolutional block
+        self.conv1 = nn.Conv2d(3, 32, kernel_size=3, padding=1)
+        self.bn1 = nn.BatchNorm2d(32)
+        self.relu = nn.ReLU()
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+        
+        # Fully connected layer
+        # After one pooling layer with 128x128 input: 128/2 = 64
+        # So output size is: 32 channels * 64 * 64 = 131,072
+        self.fc1 = nn.Linear(32 * 64 * 64, num_classes)
+    
+    def forward(self, x):
+        # First conv block
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.pool(x)
+        
+        # Flatten
+        x = torch.flatten(x, start_dim=1)
+        
+        # Fully connected
+        x = self.fc1(x)
+        
+        return x
+
+# Initialize model
+num_classes = len(dataset.classes)
+model = UrbanSceneCNN(num_classes)
+
+print("\n🤖 Model Architecture:")
+print(model)
+
+# Count parameters
+total_params = sum(p.numel() for p in model.parameters())
+trainable_params = sum(p.numel() for p in model.parameters() if p.requires_grad)
+
+print(f"\n📊 Model Statistics:")
+print(f"   Total parameters: {total_params:,}")
+print(f"   Trainable parameters: {trainable_params:,}")
+print(f"   Number of classes: {num_classes}")
+
+print("\n" + "="*70)
+print("✅ STEP 4 COMPLETE: CNN model implemented")
+print("="*70)
+print("\n💾 COMMIT NOW: 'Implemented CNN model for urban scene classification'\n")
